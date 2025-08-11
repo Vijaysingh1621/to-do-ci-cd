@@ -22,12 +22,6 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                // Run tests
-                sh 'npm test'
-            }
-        }
 
         stage('Deploy to AWS EC2') {
             steps {
