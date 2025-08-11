@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    environment {
+        // Fetch from Jenkins credentials (type: "Secret text" or "SSH Username with private key")
+        SERVER_IP = credentials('AWS_SERVER_IP')   // Store EC2 IP as Secret Text
+        DEPLOY_USER = 'ubuntu'                     // Static, safe to keep here
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // Pull latest code from GitHub
+                git branch: 'main', url: 'https://github.com/Vijaysingh1621/to-do-ci-cd'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Install dependencies
+                sh 'npm install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests
+                sh 'npm test'
+            }
+        }
+
+        stage('Deploy to AWS EC2') {
+            steps {
+                // Use SSH key stored in Jenkins credentials
+                sshagent(['AWS_SSH_KEY']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${SERVER_IP} '
+                            cd /var/www/my-todo-app &&
+                            git pull &&
+                            npm install &&
+                            pm2 restart all
+                        '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment completed successfully!"
+        }
+        failure {
+            echo "❌ Deployment failed! Check logs."
+        }
+    }
+}
