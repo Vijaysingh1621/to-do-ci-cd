@@ -32,7 +32,8 @@ pipeline {
                             cd /var/www/my-todo-app &&
                             git pull &&
                             npm install &&
-                            pm2 restart all
+                            npm run build &&
+                            pm2 serve dist 3000 --name my-vite-todo-app --spa -f
                         '
                     """
                 }
